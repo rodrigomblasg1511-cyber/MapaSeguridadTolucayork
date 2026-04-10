@@ -51,35 +51,35 @@ def generar_mapa():
         markers_js = ""
         puntos_ok = 0
 
-        for ins in incidentes:
+for ins in incidentes:
             coord_hex = ins.get('coordenadas')
             if not coord_hex: continue
+            
+            try:
+                punto = wkb.loads(coord_hex, hex=True)
+                lon, lat = punto.x, punto.y
+                
+                titulo = str(ins.get('titulo', 'Incidente')).replace('"', '').replace("'", '')
+                texto_analisis = (str(ins.get('tipo_delito', '')) + " " + titulo).lower()
+                
+                # Listas de palabras clave para el radar
+                palabras_rojas = ["robo", "asalto", "muerto", "homicidio", "arma", "violencia", "frustran", "fallece", "cristalazo", "montachoque", "carterazo", "ajuste de cuentas", "agresion", "acoso", "detenido", "capturan", "investigan"]
+                
+                palabras_doradas = ["choque", "accidente", "vial", "volcadura", "tráfico", "moto", "carro", "seguridad", "policía"]
 
-try:
-            punto = wkb.loads(coord_hex, hex=True)
-            lon, lat = punto.x, punto.y
-            
-            titulo = str(ins.get('titulo', 'Incidente')).replace('"', '').replace("'", '')
-            texto_analisis = (str(ins.get('tipo_delito', '')) + " " + titulo).lower()
-            
-            # Listas de palabras clave para el radar
-            palabras_rojas = ["robo", "asalto", "muerto", "homicidio", "arma", "violencia", "frustran", "fallece", "cristalazo", "montachoque", "carterazo", "ajuste de cuentas", "agresion", "acoso", "detenido", "capturan", "investigan"]
-            
-            palabras_doradas = ["choque", "accidente", "vial", "volcadura", "tráfico", "moto", "carro", "seguridad", "policía"]
+                # Clasificación de colores
+                if any(x in texto_analisis for x in palabras_rojas):
+                    icon_js = "redIcon"
+                elif any(x in texto_analisis for x in palabras_doradas):
+                    icon_js = "goldIcon"
+                else:
+                    icon_js = "goldIcon"
 
-            # Clasificación de colores
-            if any(x in texto_analisis for x in palabras_rojas):
-                icon_js = "redIcon"
-            elif any(x in texto_analisis for x in palabras_doradas):
-                icon_js = "goldIcon"
-            else:
-                icon_js = "goldIcon" # Color por defecto si no detecta ninguna
-
-            markers_js += f"L.marker([{lat}, {lon}], {{icon: {icon_js}}}).addTo(map).bindPopup('<b>{titulo}</b>');\n"
-            puntos_ok += 1
-            
-        except:
-            continue
+                markers_js += f"L.marker([{lat}, {lon}], {{icon: {icon_js}}}).addTo(map).bindPopup('<b>{titulo}</b>');\n"
+                puntos_ok += 1
+                
+            except:
+                continue
 
         html_end = "</script></body></html>"
         
