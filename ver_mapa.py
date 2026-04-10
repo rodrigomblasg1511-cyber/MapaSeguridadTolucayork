@@ -1,48 +1,50 @@
-import re
+import os
 from supabase import create_client
 from shapely import wkb
 
-# 1. TUS LLAVES
-URL_SUPABASE = 'https://vgovgphauqbaxhurqdqo.supabase.co'
-KEY_SUPABASE = 'sb_publishable_jH3kroEnsfa0Trp5Aa-Yww_p9l4a2Mz'
-
+# Llaves desde la bóveda secreta de GitHub
+URL_SUPABASE = os.getenv('URL_SUPABASE')
+KEY_SUPABASE = os.getenv('KEY_SUPABASE')
 supabase = create_client(URL_SUPABASE, KEY_SUPABASE)
 
 def generar_mapa():
-    print("🛰️ Generando mapa con semáforo de colores (Rojo, Dorado, Verde)...")
     try:
-        res = supabase.table("incidentes").select("*").execute()
-        incidentes = res.data
-        
+        # 1. Descargar los incidentes de la base de datos
+        respuesta = supabase.table("incidentes").select("*").execute()
+        incidentes = respuesta.data
+
+        # 2. Cabecera del archivo HTML (Mapa centrado en Toluca)
         html_start = """
         <!DOCTYPE html>
         <html>
         <head>
-            <title>Mapa Seguridad Toluca</title>
+            <title>Mapa de Seguridad Toluca</title>
             <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-            <style>#map { height: 100vh; width: 100%; } body { margin: 0; }</style>
+            <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+            <style>
+                body { margin: 0; padding: 0; }
+                #map { width: 100vw; height: 100vh; }
+            </style>
         </head>
         <body>
             <div id="map"></div>
-            <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
             <script>
-                var map = L.map('map').setView([19.2827, -99.6557], 11);
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
+                var map = L.map('map').setView([19.2826, -99.6557], 12);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '© OpenStreetMap'
+                }).addTo(map);
 
-                // Configuración de Iconos
-                var redIcon = L.icon({
-                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+                var redIcon = new L.Icon({
+                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
                     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
                     iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
                 });
-                var goldIcon = L.icon({
-                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-gold.png',
-                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
-                });
-                var greenIcon = L.icon({
-                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
+
+                var goldIcon = new L.Icon({
+                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-gold.png',
                     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
                     iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
                 });
@@ -51,7 +53,8 @@ def generar_mapa():
         markers_js = ""
         puntos_ok = 0
 
-for ins in incidentes:
+        # 3. Procesar cada punto
+        for ins in incidentes:
             coord_hex = ins.get('coordenadas')
             if not coord_hex: continue
             
@@ -62,9 +65,8 @@ for ins in incidentes:
                 titulo = str(ins.get('titulo', 'Incidente')).replace('"', '').replace("'", '')
                 texto_analisis = (str(ins.get('tipo_delito', '')) + " " + titulo).lower()
                 
-                # Listas de palabras clave para el radar
+                # Radar de palabras
                 palabras_rojas = ["robo", "asalto", "muerto", "homicidio", "arma", "violencia", "frustran", "fallece", "cristalazo", "montachoque", "carterazo", "ajuste de cuentas", "agresion", "acoso", "detenido", "capturan", "investigan"]
-                
                 palabras_doradas = ["choque", "accidente", "vial", "volcadura", "tráfico", "moto", "carro", "seguridad", "policía"]
 
                 # Clasificación de colores
@@ -82,14 +84,17 @@ for ins in incidentes:
                 continue
 
         html_end = "</script></body></html>"
-        
+
+        # 4. Guardar el archivo definitivo
         with open("index.html", "w", encoding="utf-8") as f:
             f.write(html_start + markers_js + html_end)
-        
-        print(f"✅ ¡Mapa actualizado! Ahora con globos Verdes, Rojos y Dorados.")
+            
+        print(f"✅ ¡Mapa actualizado con {puntos_ok} puntos!")
 
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"❌ Error general: {e}")
 
 if __name__ == "__main__":
+    print("🗺️ Dibujando mapa en la nube...")
     generar_mapa()
+    print("✅ Mapa terminado.")
