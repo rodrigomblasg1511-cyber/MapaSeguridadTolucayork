@@ -88,5 +88,7 @@ def generar_mapa():
         print(f"❌ Error: {e}")
 
 # 3. BUCLE DE AUTOMATIZACIÓN
-if __name__ == "__main__":
-    print("🤖 Iniciando actualización automática del mapa...")
+if _name_ == "_main_":
+    print("🤖 Robot en la nube trabajando...")
+    ejecutar_extraccion()
+    print("✅ Misión cumplida. Apagando.")
