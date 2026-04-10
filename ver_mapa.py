@@ -62,22 +62,27 @@ def generar_mapa():
                 titulo = str(ins.get('titulo', 'Incidente')).replace("'", "").replace('"', '')
                 texto_analisis = (str(ins.get('tipo_delito', '')) + " " + titulo).lower()
                 
-                # Lógica de colores: Rojo (Peligro), Dorado (Vial), Verde (General)
-                icon_js = "greenIcon" 
-                
-                if any(x in texto_analisis for x in ["robo", "asalto", "muerto", "homicidio", "arma", "violencia", "frustran"]):
-                    icon_js = "redIcon"
-                elif any(x in texto_analisis for x in ["choque", "accidente", "vial", "volcadura", "tráfico"]):
-                    icon_js = "goldIcon"
+                # Listas de palabras clave para el radar
+            palabras_rojas = ["robo", "asalto", "muerto", "homicidio", "arma", "violencia", "frustran", "fallece", "cristalazo", "montachoque", "carterazo", "ajuste de cuentas", "agresion", "acoso", "detenido", "capturan", "investigan"]
+            
+            palabras_doradas = ["choque", "accidente", "vial", "volcadura", "tráfico", "moto", "carro", "seguridad", "policía"]
 
-                markers_js += f"L.marker([{lat}, {lon}], {{icon: {icon_js}}}).addTo(map).bindPopup('<b>{titulo}</b>');\n"
-                puntos_ok += 1
+# Clasificación de colores
+        if any(x in texto_analisis for x in palabras_rojas):
+            icon_js = "redIcon"
+        elif any(x in texto_analisis for x in palabras_doradas):
+            icon_js = "goldIcon"
+        else:
+            icon_js = "goldIcon" # Color por defecto si no detecta ninguna
+
+        markers_js += f"L.marker([{lat}, {lon}], {{icon: {icon_js}}}).addTo(map).bindPopup('<b>{titulo}</b>');\n"
+        puntos_ok += 1
             except:
                 continue
 
         html_end = "</script></body></html>"
         
-        with open("mapa_seguridad.html", "w", encoding="utf-8") as f:
+        with open("index.html", "w", encoding="utf-8") as f:
             f.write(html_start + markers_js + html_end)
         
         print(f"✅ ¡Mapa actualizado! Ahora con globos Verdes, Rojos y Dorados.")
