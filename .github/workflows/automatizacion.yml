@@ -18,7 +18,7 @@ jobs:
           python-version: '3.10'
 
       - name: Instalar librerías
-        run: pip install -r requirements.txt
+        run: pip install supabase google-genai shapely
 
       - name: 1️⃣ Ejecutar Extractor de Noticias
         env:
