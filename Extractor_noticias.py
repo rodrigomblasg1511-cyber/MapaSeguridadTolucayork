@@ -90,7 +90,3 @@ def generar_mapa():
 # 3. BUCLE DE AUTOMATIZACIÓN
 if __name__ == "__main__":
     print("🤖 Iniciando actualización automática del mapa...")
-    while True:
-        generar_mapa()
-        # El código pausa 5 minutos (300 segundos) y vuelve a dibujar el mapa
-        time.sleep(300)
