@@ -2,9 +2,9 @@ name: ejecutar-robots
 
 on:
   push:
-    branches: ["main"] # O la rama que uses
+    branches: ["main"]
   schedule:
-    - cron: '0 * * * *' # Esto corre el bot cada hora, por ejemplo
+    - cron: '0 * * * *'
   workflow_dispatch:
 
 # Permisos necesarios para GitHub Pages
@@ -32,10 +32,10 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: 1️⃣ Ejecutar Extractor de Noticias
-        run: python tu_script_noticias.py # Cambia por tu nombre real de archivo
+        run: python Extractor_noticias.py
 
       - name: 2️⃣ Ejecutar Dibujante del Mapa
-        run: python tu_script_mapa.py # Cambia por tu nombre real de archivo
+        run: python ver_mapa.py
 
       - name: Configurar Páginas de GitHub
         uses: actions/configure-pages@v4
@@ -43,7 +43,7 @@ jobs:
       - name: Subir artefacto
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.' # Sube todo el contenido de la carpeta raíz
+          path: 'public' # ¡Aquí está el cambio clave! Ahora busca tu index.html
 
       - name: 3️⃣ Desplegar a GitHub Pages
         id: deployment
