@@ -88,15 +88,16 @@ def generar_mapa():
 
         html_end = "</script></body></html>"
 
-        # 4. Guardar el archivo definitivo (Esto garantiza que el index.html SIEMPRE nazca)
-        with open("index.html", "w", encoding="utf-8") as f:
+        # 4. Guardar en una CARPETA PÚBLICA (Aquí está la magia)
+        os.makedirs("public", exist_ok=True)
+        with open("public/index.html", "w", encoding="utf-8") as f:
             f.write(html_start + markers_js + html_end)
             
-        print(f"✅ ¡Mapa actualizado con {puntos_ok} puntos válidos!")
+        print(f"✅ ¡Mapa actualizado con {puntos_ok} puntos válidos en la carpeta public!")
 
     except Exception as e:
         print(f"❌ Error crítico: {e}")
-        sys.exit(1) # Ahora sí, si se rompe algo grave, se pondrá en rojo en GitHub
+        sys.exit(1)
 
 if __name__ == "__main__":
     print("🗺️ Dibujando mapa en la nube...")
