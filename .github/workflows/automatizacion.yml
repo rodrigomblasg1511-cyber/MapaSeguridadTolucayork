@@ -1,40 +1,50 @@
-name: Patrullaje y Mapa Toluca
+name: ejecutar-robots
 
 on:
+  push:
+    branches: ["main"] # O la rama que uses
   schedule:
-    - cron: '0 * * * *'
+    - cron: '0 * * * *' # Esto corre el bot cada hora, por ejemplo
   workflow_dispatch:
 
+# Permisos necesarios para GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
-  ejecutar-robots:
+  build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Clonar el código
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Instalar Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
       - name: Instalar librerías
-        run: pip install supabase google-genai shapely
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: 1️⃣ Ejecutar Extractor de Noticias
-        env:
-          GEMINI_KEY: ${{ secrets.GEMINI_KEY }}
-          URL_SUPABASE: ${{ secrets.URL_SUPABASE }}
-          KEY_SUPABASE: ${{ secrets.KEY_SUPABASE }}
-        run: python Extractor_noticias.py
+        run: python tu_script_noticias.py # Cambia por tu nombre real de archivo
 
       - name: 2️⃣ Ejecutar Dibujante del Mapa
-        env:
-          URL_SUPABASE: ${{ secrets.URL_SUPABASE }}
-          KEY_SUPABASE: ${{ secrets.KEY_SUPABASE }}
-        run: python ver_mapa.py
+        run: python tu_script_mapa.py # Cambia por tu nombre real de archivo
 
-      - name: 3️⃣ Subir a Netlify
-        env:
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-        run: npx netlify-cli deploy --prod --dir=.
+      - name: Configurar Páginas de GitHub
+        uses: actions/configure-pages@v4
+
+      - name: Subir artefacto
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.' # Sube todo el contenido de la carpeta raíz
+
+      - name: 3️⃣ Desplegar a GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
