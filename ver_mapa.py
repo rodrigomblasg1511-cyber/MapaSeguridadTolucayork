@@ -1,4 +1,5 @@
 import os
+import sys
 from supabase import create_client
 from shapely import wkb
 
@@ -11,9 +12,9 @@ def generar_mapa():
     try:
         # 1. Descargar los incidentes de la base de datos
         respuesta = supabase.table("incidentes").select("*").execute()
-        incidentes = respuesta.data
+        incidentes = respuesta.data or []
 
-        # 2. Cabecera del archivo HTML (Mapa centrado en Toluca)
+        # 2. Cabecera del archivo HTML
         html_start = """
         <!DOCTYPE html>
         <html>
@@ -53,23 +54,24 @@ def generar_mapa():
         markers_js = ""
         puntos_ok = 0
 
-        # 3. Procesar cada punto
+        # 3. Procesar cada punto de forma súper segura
         for ins in incidentes:
             coord_hex = ins.get('coordenadas')
-            if not coord_hex: continue
+            if not coord_hex: 
+                continue
             
             try:
                 punto = wkb.loads(coord_hex, hex=True)
+                if punto is None: 
+                    continue
                 lon, lat = punto.x, punto.y
                 
                 titulo = str(ins.get('titulo', 'Incidente')).replace('"', '').replace("'", '')
                 texto_analisis = (str(ins.get('tipo_delito', '')) + " " + titulo).lower()
                 
-                # Radar de palabras
                 palabras_rojas = ["robo", "asalto", "muerto", "homicidio", "arma", "violencia", "frustran", "fallece", "cristalazo", "montachoque", "carterazo", "ajuste de cuentas", "agresion", "acoso", "detenido", "capturan", "investigan"]
                 palabras_doradas = ["choque", "accidente", "vial", "volcadura", "tráfico", "moto", "carro", "seguridad", "policía"]
 
-                # Clasificación de colores
                 if any(x in texto_analisis for x in palabras_rojas):
                     icon_js = "redIcon"
                 elif any(x in texto_analisis for x in palabras_doradas):
@@ -80,21 +82,23 @@ def generar_mapa():
                 markers_js += f"L.marker([{lat}, {lon}], {{icon: {icon_js}}}).addTo(map).bindPopup('<b>{titulo}</b>');\n"
                 puntos_ok += 1
                 
-            except:
+            except Exception:
+                # Si este incidente en particular está roto, lo ignora y pasa al siguiente sin detener el programa
                 continue
 
         html_end = "</script></body></html>"
 
-        # 4. Guardar el archivo definitivo
+        # 4. Guardar el archivo definitivo (Esto garantiza que el index.html SIEMPRE nazca)
         with open("index.html", "w", encoding="utf-8") as f:
             f.write(html_start + markers_js + html_end)
             
-        print(f"✅ ¡Mapa actualizado con {puntos_ok} puntos!")
+        print(f"✅ ¡Mapa actualizado con {puntos_ok} puntos válidos!")
 
     except Exception as e:
-        print(f"❌ Error general: {e}")
+        print(f"❌ Error crítico: {e}")
+        sys.exit(1) # Ahora sí, si se rompe algo grave, se pondrá en rojo en GitHub
 
 if __name__ == "__main__":
     print("🗺️ Dibujando mapa en la nube...")
     generar_mapa()
-    print("✅ Mapa terminado.")
+    print("✅ Proceso terminado.")
