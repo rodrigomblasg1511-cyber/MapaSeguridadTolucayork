@@ -2,3 +2,4 @@ supabase
 google-generativeai
 folium
 requests
+shapely
