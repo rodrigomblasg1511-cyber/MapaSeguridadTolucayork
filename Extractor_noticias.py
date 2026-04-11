@@ -20,6 +20,7 @@ def ejecutar_extraccion():
     prompt_busqueda = f"Dame una lista de los 10 títulos más recientes de seguridad en Toluca de estos sitios: {fuentes}. Responde solo los títulos, uno por línea."
 
     try:
+        # CORRECCIÓN: Usamos 'model' que es lo que definiste arriba
         response = model.generate_content(prompt_busqueda)
         titulos = response.text.strip().split('\n')
         
@@ -27,7 +28,6 @@ def ejecutar_extraccion():
             titulo = titulo.strip()
             if len(titulo) < 15: continue
 
-            # Verificar si ya existe
             check = supabase.table("incidentes").select("id").eq("titulo", titulo).execute()
             if len(check.data) > 0: continue
 
@@ -36,7 +36,8 @@ def ejecutar_extraccion():
             prompt_coords = f'Analiza: "{titulo}". Responde SOLO JSON: {{"delito": "Tipo", "lat": 19.x, "lon": -99.x}}'
             
             try:
-                time.sleep(3) # Evitar saturar la API
+                time.sleep(3) 
+                # CORRECCIÓN: Aquí también usamos 'model'
                 res_coords = model.generate_content(prompt_coords)
                 txt = res_coords.text.strip().replace('```json', '').replace('```', '')
                 datos = json.loads(txt)
@@ -51,7 +52,7 @@ def ejecutar_extraccion():
                 print(f"📍 AGREGADO: {datos['delito']}")
                 
             except Exception as e:
-                print(f"⚠️ Error procesando noticia: {e}")
+                print(f"⚠️ Error en noticia: {e}")
 
     except Exception as e:
         print(f"❌ Error crítico: {e}")
