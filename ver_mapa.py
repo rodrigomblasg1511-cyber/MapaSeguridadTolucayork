@@ -32,27 +32,36 @@ def generar_mapa():
         """
 
         markers_js = ""
+        puntos_ok = 0
+        
+        print(f"📦 Total de filas encontradas en Supabase: {len(incidentes)}")
+
         for ins in incidentes:
             try:
-                coord_hex = ins.get('coordenadas')
-                if not coord_hex: continue
-                punto = wkb.loads(coord_hex, hex=True)
-                lon, lat = punto.x, punto.y
-                titulo = str(ins.get('titulo', 'Incidente')).replace("'", "")
+                coord_raw = ins.get('coordenadas')
+                if not coord_raw: continue
                 
-                # Clasificación simple
-                icon = "redIcon" if "robo" in titulo.lower() or "muerto" in titulo.lower() else "goldIcon"
+                # Intentamos extraer lat y lon del texto "POINT(lon lat)"
+                # Esto es más seguro si tu columna en Supabase es de texto
+                if isinstance(coord_raw, str) and "POINT" in coord_raw:
+                    coords_clean = coord_raw.replace("POINT(", "").replace(")", "")
+                    lon, lat = map(float, coords_clean.split())
+                else:
+                    # Si es formato hexadecimal (Geometry), usamos shapely
+                    punto = wkb.loads(coord_raw, hex=True)
+                    lon, lat = punto.x, punto.y
+                
+                titulo = str(ins.get('titulo', 'Incidente')).replace("'", "")
+                tipo = str(ins.get('tipo_delito', '')).lower()
+                
+                # Elegir icono
+                icon = "redIcon" if any(x in tipo for x in ["robo", "asalto", "muerto"]) else "goldIcon"
+                
                 markers_js += f"L.marker([{lat}, {lon}], {{icon: {icon}}}).addTo(map).bindPopup('{titulo}');\n"
-            except: continue
-
-        os.makedirs("public", exist_ok=True)
-        with open("public/index.html", "w", encoding="utf-8") as f:
-            f.write(html_start + markers_js + "</script></body></html>")
-        print("✅ Mapa generado en public/index.html")
-
-    except Exception as e:
-        print(f"❌ Error: {e}")
-        sys.exit(1)
+                puntos_ok += 1
+            except Exception as e:
+                print(f"⚠️ Saltando un punto por error: {e}")
+                continue
 
 if __name__ == "__main__":
     generar_mapa()
