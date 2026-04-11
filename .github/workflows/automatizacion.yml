@@ -15,7 +15,6 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Clonar el código
         uses: actions/checkout@v4
@@ -39,6 +38,9 @@ jobs:
 
       - name: 2️⃣ Ejecutar Dibujante del Mapa
         run: python ver_mapa.py
+        env:
+          URL_SUPABASE: ${{ secrets.URL_SUPABASE }}
+          KEY_SUPABASE: ${{ secrets.KEY_SUPABASE }}
 
       - name: Configurar Páginas de GitHub
         uses: actions/configure-pages@v4
