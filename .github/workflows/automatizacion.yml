@@ -7,7 +7,6 @@ on:
     - cron: '0 * * * *'
   workflow_dispatch:
 
-# Permisos necesarios para GitHub Pages
 permissions:
   contents: read
   pages: write
@@ -33,6 +32,10 @@ jobs:
 
       - name: 1️⃣ Ejecutar Extractor de Noticias
         run: python Extractor_noticias.py
+        env:
+          URL_SUPABASE: ${{ secrets.URL_SUPABASE }}
+          KEY_SUPABASE: ${{ secrets.KEY_SUPABASE }}
+          GEMINI_KEY: ${{ secrets.GEMINI_KEY }}
 
       - name: 2️⃣ Ejecutar Dibujante del Mapa
         run: python ver_mapa.py
@@ -43,7 +46,7 @@ jobs:
       - name: Subir artefacto
         uses: actions/upload-pages-artifact@v3
         with:
-          path: 'public' # ¡Aquí está el cambio clave! Ahora busca tu index.html
+          path: 'public'
 
       - name: 3️⃣ Desplegar a GitHub Pages
         id: deployment
