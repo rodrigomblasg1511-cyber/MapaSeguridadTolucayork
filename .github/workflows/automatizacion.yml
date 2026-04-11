@@ -27,7 +27,8 @@ jobs:
       - name: Instalar librerías
         run: |
           python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          # Forzamos la instalación. Si se llama 'requeriments.txt', cámbialo aquí abajo también:
+          pip install -r requirements.txt
 
       - name: 1️⃣ Ejecutar Extractor de Noticias
         run: python Extractor_noticias.py
